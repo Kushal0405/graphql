@@ -15,6 +15,9 @@ const LaunchWrapper = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
+    .actions {
+      margin: 10px;
+    }
   }
 `;
 export default LaunchWrapper;
