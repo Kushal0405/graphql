@@ -1,34 +1,23 @@
-import { ApolloClient, gql, InMemoryCache, NetworkStatus, useQuery } from "@apollo/client";
-import { offsetLimitPagination } from "@apollo/client/utilities";
-import { Box, Container, Divider, LinearProgress, List, ListItem, TextField } from "@mui/material";
+import { gql, NetworkStatus, useQuery } from "@apollo/client";
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  LinearProgress,
+  List,
+  ListItem,
+  TextField,
+} from "@mui/material";
 import moment from "moment";
 import { useState } from "react";
 import { InView } from "react-intersection-observer";
 import { Link } from "react-router-dom";
 import LaunchWrapper from "./LaunchWrapper";
 
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        launchesPast: offsetLimitPagination(),
-      },
-    },
-  },
-});
-
-const client = new ApolloClient({
-  uri: "https://api.spacex.land/graphql/",
-  cache,
-});
-
 const LAUNCHES = gql`
   query getLaunches($offset: Int!, $limit: Int!) {
-    launches: launchesPast(
-      offset: $offset
-      limit: $limit
-      order: "desc"
-    ) {
+    launches: launchesPast(limit: $limit, offset: $offset) {
       id
       mission_name
       launch_year
@@ -42,18 +31,17 @@ const includesInsesnsitive = (strA, strB) => {
   return false;
 };
 
-const Launches = () => {
-  const [fullyLoaded, setFullyLoaded] = useState(false);
+const PAGE_SIZE = 30;
+
+const Launches = ({ first }) => {
+  const [page, setPage] = useState(0);
   const [searchInput, setSearchInput] = useState("");
-  const { data, networkStatus, error, fetchMore, variables } = useQuery(
+  const [fullyLoaded, setFullyLoaded] = useState(false);
+  const { networkStatus, error, fetchMore, variables, data } = useQuery(
     LAUNCHES,
     {
-      client,
       notifyOnNetworkStatusChange: true,
-      variables: {
-        offset: 0,
-        limit: 10,
-      },
+      variables: { limit: PAGE_SIZE, offset: page * PAGE_SIZE },
     }
   );
   const filteredRecords =
@@ -65,7 +53,6 @@ const Launches = () => {
           }
           return false;
         });
-
 
   if (networkStatus === NetworkStatus.loading) {
     return (
@@ -111,18 +98,30 @@ const Launches = () => {
                 </List>
               ))}
             </nav>
+            <div className="actionBtn">
+              <Button
+                onClick={() => setPage((e) => e - 1)}
+                variant="outlined"
+                disabled={!page}
+              >
+                Previous
+              </Button>
+              <Button onClick={() => setPage((e) => e + 1)} variant="outlined">
+                Next
+              </Button>
+            </div>
           </Box>
         </LaunchWrapper>
       </Container>
       {networkStatus !== NetworkStatus.fetchMore &&
-        data.launches.length % variables.limit === 0 &&
-        !fullyLoaded && (
+        data?.launches?.length % variables.limit === 0 &&
+        fullyLoaded && (
           <InView
             onChange={async (inView) => {
               if (inView) {
                 const result = await fetchMore({
                   variables: {
-                    offset: data.launches.length,
+                    offset: data?.launches?.length,
                   },
                 });
                 setFullyLoaded(!result.data.launches.length);
