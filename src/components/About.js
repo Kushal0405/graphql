@@ -1,6 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import { Container, Divider } from "@mui/material";
 import { useParams } from "react-router-dom";
+import {LinearProgress} from '@mui/material'
 import AboutWrapper from "./AboutWrapper";
 
 const About = () => {
@@ -17,7 +18,7 @@ const About = () => {
   `;
   const { loading, error, data } = useQuery(ABOUT, { variables: id });
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <div>   <LinearProgress /></div>;
   if (error) return <p>Error</p>;
 
   return (
