@@ -106,6 +106,7 @@ const Launches = ({ first }) => {
               >
                 Previous
               </Button>
+              <span>Page - {page}</span>
               <Button onClick={() => setPage((e) => e + 1)} variant="outlined">
                 Next
               </Button>
